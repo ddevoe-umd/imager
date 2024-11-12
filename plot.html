@@ -1,0 +1,399 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">	
+<link rel="stylesheet" href="style.css">
+<script src="js/canvasjs.min.js"></script>
+</head>
+
+
+<body>
+
+<div class="buttons">
+  <button id="start" class="button-84" role="button" onclick="startAssay()" > Start </button>
+  <button id="stop" class="button-84" onclick="endAssay()" > End </button>
+  <button id="analyze" class="button-84" onclick="analyzeData()" > Analyze </button>
+</div>
+
+<div class="chart" id="rawDataChart"></div>
+<div class="chart" id="temperatureChart"></div>
+<div class="chart" id="filteredDataChart"></div>
+<div class="chart" id="ttpChart"></div>
+
+<div class="results">
+  <div class="results-text" id="results-heading"></div>
+  <div class="results-text" id="result-1"></div>
+  <div class="results-text" id="result-2"></div>
+  <div class="results-text" id="result-3"></div>
+  <div class="results-text" id="result-4"></div>
+  <div class="results-text" id="result-5"></div>
+  <div class="results-text" id="result-6"></div>
+  <div class="results-text" id="result-7"></div>
+  <div class="results-text" id="result-8"></div>
+  <div class="results-text" id="result-9"></div>
+  <div class="results-text" id="result-10"></div>
+  <div class="results-text" id="result-11"></div>
+  <div class="results-text" id="result-12"></div>
+</div>
+
+</body>
+
+
+<script>
+
+// Prevent system from sleeping
+// Does not work yet
+async function getScreenLock() {
+	try {
+		const wakeLock = await navigator.wakeLock.request('screen');
+		console.log('Wake Lock acquired:', wakeLock);
+	} catch(err) {
+		console.error('Error acquiring wake lock:', err);
+	}
+	//return wakeLock;
+}
+
+window.onload = function () {
+	// Disable buttons at start-up:
+	document.getElementById("stop").disabled = true;
+	document.getElementById("analyze").disabled = true;
+	// getScreenLock();   // Does not work yet
+};
+
+
+// Globals:
+let assayTimer; // timer for running an assay
+let sampleInterval = 2500;   // data sampling interval (msec)
+let currentFileName;   // data file from most recent assay
+
+async function queryServer(message) {
+	let url = "http://raspberrypi.local:8080";
+	let response = await fetch( url, {
+		method: "POST",
+    	headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		body: 'todo=' + message
+		} );
+	return(response)
+}
+
+
+async function startPID() {
+	let message = 'start';
+	let data = '';
+	let response = await queryServer(JSON.stringify([message,data]));
+  if (response.ok) {
+		results = await response.text();
+		console.log(results);
+		let results_array = results.split(",");
+		newData = [];
+		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
+		return(newData);
+	}
+}
+
+async function endAssay() {
+	document.getElementById("stop").disabled = true;
+	if (assayTimer) clearInterval(assayTimer);
+	document.getElementById("start").disabled = false;
+
+	let message = 'end';
+  let data = '';
+	let response = await queryServer(JSON.stringify([message,data]));
+	if (response.ok) {
+		results = await response.text();
+		currentFileName = results;
+		console.log(results);
+		document.getElementById("analyze").disabled = false;
+		document.getElementById('analyze').innerText = "Analyze " + currentFileName;
+	}
+}
+
+async function getData() {
+	let message = 'getData';
+	let data = '';
+	let response = await queryServer(JSON.stringify([message,data]));
+  if (response.ok) {
+		results = await response.text();
+		console.log(results);
+		let results_array = results.split(",");
+		newData = [];
+		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
+		return(newData);
+	}
+}
+
+async function analyzeData() {
+  let message = 'analyze';
+	let data = currentFileName;
+	let response = await queryServer(JSON.stringify([message,data]));
+	if (response.ok) {
+		results = await response.text();
+		let data = JSON.parse(results);
+    let ttp = data[0];
+    let xy = data[1];
+    displayFilteredData(xy);
+		displayTimeToPositiveData(ttp);
+		document.getElementById("result-1").innerHTML = "result 1";
+
+		// Display TTP values as text:
+		//for (let i=0; i<12; i++) {
+    //    let display_str = "TTP = " + ttp[i].toString();
+		//    let element = "result-"+(i+1).toString();
+		//	  document.getElementById(element).innerHTML = display_str;
+		//}
+	}
+
+}
+
+function getWellNames() {
+	return([
+		"MecA",
+		"MecA",
+		"MecA",
+		"nuc",
+		"nuc",
+		"nuc",
+		"FemB",
+		"FemB",
+		"FemB",
+		"+ctr",
+		"-ctr",
+		"-ctr"
+		])
+}
+
+function setupAmplificationChart(targetContainer) {
+	let wellArray = [[],[],[],[],[],[],[],[],[],[],[],[]];
+	let wellNames = getWellNames();
+	let lineColors = [
+		"#ff0000",
+		"#ff0000",
+		"#ff0000",
+		"#00ff00",
+		"#00ff00",
+		"#00ff00",
+		"#0000ff",
+		"#0000ff",
+		"#0000ff",
+		"#000000",
+		"#000000",
+		"#000000"
+	]
+	let lineDashTypes = [
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"solid",
+		"dash",
+		"dash",
+		"dot"
+	]
+	let isInLegend = [
+		true,
+		false,
+		false,
+		true,
+		false,
+		false,
+		true,
+		false,
+		false,
+		true,
+		false,
+		true
+	]
+	// Set up plot info:
+	let plotInfo = [];
+	for (let i=0; i<wellArray.length; i++) {
+		plotInfo.push(
+		{ 	
+			type: "line",
+			showInLegend: isInLegend[i],
+			name: wellNames[i],
+			dataPoints: wellArray[i],
+			color: lineColors[i],
+			lineDashType: lineDashTypes[i]
+		}
+		)
+	}
+	let chart = new CanvasJS.Chart(targetContainer, {
+		zoomEnabled: true,
+		title: {
+			text: "Fluorescence",
+			fontSize: 16
+		},
+		axisX: {
+			title: "Time (min)"
+		},
+		axisY:{
+			includeZero: true
+		}, 
+		toolTip: {
+			shared: true
+		},
+		legend: {
+			cursor:"pointer",
+			verticalAlign: "top",
+			fontSize: 16,
+			fontColor: "dimGrey",
+			itemclick : toggleDataSeries
+		},
+		data: plotInfo
+	});
+	function toggleDataSeries(e) {
+		if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+			e.dataSeries.visible = false;
+		}
+		else {
+			e.dataSeries.visible = true;
+		}
+		chart.render();
+	}
+	chart.render();
+	return [chart, wellArray]
+}
+
+
+function setupTemperatureChart(targetContainer) {
+
+	// Set up plot info:
+	let plotInfo = [];
+	let temperature = [];
+	plotInfo.push(
+	{ 	
+		type: "line",
+		showInLegend: true,
+		name: "Temperature",
+		dataPoints: temperature
+	}
+	)
+	let chart = new CanvasJS.Chart(targetContainer, {
+		zoomEnabled: true,
+		title: {
+			text: "Temperature",
+			fontSize: 16
+		},
+		axisX: {
+			title: "Time (min)"
+		},
+		axisY:{
+			includeZero: true
+		}, 
+		toolTip: {
+			shared: true
+		},
+		legend: {
+			cursor:"pointer",
+			verticalAlign: "top",
+			fontSize: 16,
+			fontColor: "dimGrey",
+			itemclick : toggleDataSeries
+		},
+		data: plotInfo
+	});
+
+	function toggleDataSeries(e) {
+		if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+			e.dataSeries.visible = false;
+		}
+		else {
+			e.dataSeries.visible = true;
+		}
+		chart.render();
+	}
+
+	chart.render();
+	return [chart, temperature]
+}
+
+
+async function startAssay() {
+	
+	document.getElementById("start").disabled = true;
+	document.getElementById("stop").disabled = false;
+	document.getElementById("analyze").disabled = true;
+	document.getElementById('analyze').innerText = "Analyze";
+
+	let [amplificationChart, wellArray] = setupAmplificationChart('rawDataChart')
+	let [temperatureChart, temperature] = setupTemperatureChart('temperatureChart')
+
+	let time = new Date;
+	let startTime = time.getTime();
+
+  nullData = await startPID();    // Tell Python to start the PID controller
+
+	async function updateChart() {
+		let now = new Date();
+		minutes = (now - startTime)/1000/60;
+
+		newData = await getData();   		// Get data from Python
+
+		// extend the amplification curve data:
+		for (let j=0; j<wellArray.length; j++) {
+			wellArray[j].push({
+				x: minutes,
+				y: newData[j]
+			});
+		}
+
+		// extend the temperature array:
+		temperature.push({
+			x: minutes,
+			y: newData[wellArray.length]   // T is last element in newData
+			});   
+
+		// Display the real-time amplification & temperature curves:
+		amplificationChart.render();
+		temperatureChart.render();
+	}
+
+	// Start the assay:
+	assayTimer = setInterval(function(){updateChart()}, sampleInterval);
+}
+
+
+function displayFilteredData(data) {
+	let [chart, wellArray] = setupAmplificationChart('filteredDataChart');
+	for (let i=0; i<wellArray.length; i++) {
+		for (let j=0; j<data[0].length; j++) {
+			wellArray[i].push(data[i][j]);
+		}
+	}
+	chart.render();
+	chart.axisY[0].set('minimum',0);
+	chart.axisY[0].set('maximum',1);
+}
+
+
+function displayTimeToPositiveData(ttpData) {
+    ttpBars = [];
+    let wellNames = getWellNames();
+	for (let i=0; i<wellNames.length; i++) {
+		ttpBars.push({
+			y: ttpData[i],
+			label: wellNames[i]
+		});
+	}
+	var chart = new CanvasJS.Chart("ttpChart", {
+		animationEnabled: true,
+		theme: "light2",   // "light1", "light2", "dark1", "dark2"
+		data: [{        
+			type: "column",  
+			showInLegend: true, 
+			legendMarkerColor: "grey",
+			legendText: "",
+			dataPoints: ttpBars
+		}]
+	})
+	chart.render();
+	//chart.axisY[0].set('minimum',-1);
+}
+
+</script>
+
+</html>
