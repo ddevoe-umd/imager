@@ -1,10 +1,8 @@
-# HTTP server code adapted from:
+# from:
 # https://gist.github.com/mdonkers/63e115cc0c79b4f6b8b3a6b797e485c7
-#
+
 # Start in background, with stdout logged to nohup.out:
 # nohup python3 -u python_server.py &
-#
-# Need to create a directory called "data" in same directory as code file
 
 import simple_pid   # see https://pypi.org/project/simple-pid/
 import json
@@ -33,7 +31,7 @@ pwm = GPIO.PWM(PWM_PIN,490)
 pid = PID(Kp=13, Ki=0.17, Kd=1.2, setpoint=60)     # Can add sample_time, output_limits, etc.
 pid.output_limits = (0,100)
 b_bias = 0.48                   # value for linear interpolation of temperature
-chip_temp = 0                   # current chip temperature
+well_temp = 0                   # current well temperature
 
 # Start heater PWM:
 duty_cycle = 0
@@ -75,9 +73,12 @@ class S(BaseHTTPRequestHandler):
         print(data)
         if action == 'start':            # Start the PID loop for temp control
             start_pid()
+        if action == 'getImage':         # Get an image of the chip
+            results = cam4_server.get_image()
+            self.wfile.write(results.encode('utf-8'))
         if action == 'getData':          # Capture & analyze single camera image
             results = cam4_server.get_image_data()
-            results.append(chip_temp)
+            results.append(well_temp)
             self.wfile.write(",".join([str(x) for x in results]).encode('utf-8'))
         elif action == 'end':            # Turn off PID loop and rename final data file
             results = cam4_server.end_imaging()
@@ -103,7 +104,7 @@ def cali_fun(y_data):
 
 # Temperature control (run in separate thread):
 def run_pid(stop_event):
-    global chip_temp
+    global well_temp
     global const, Tb, Tt
     times, board, chip, well  = [], [], [], []
     rd = 50*1e6
@@ -112,24 +113,23 @@ def run_pid(stop_event):
     while not stop_event.is_set():
         try:
             # Establish list that will store values from ADC and read the ADC
-            vals_raw = [const.value, Tb.value, Tt.value]
-            vals = [1023*v for v in vals_raw]
+            value_raw = [const.value, Tb.value, Tt.value]
+            values = [x*1023 for x in value_raw]
                 
             # Change the duty cycle based on the ADC reading    
-            duty_cycle = pid(b_bias*cali_fun(vals[1] -  vals[0]) + (1-b_bias)*cali_fun(vals[2] - vals[0]))
+            duty_cycle = pid(b_bias*cali_fun(values[1] -  values[0]) + (1-b_bias)*cali_fun(values[2] -  values[0]))
             pwm.ChangeDutyCycle(duty_cycle)
     
             # Store values every 50ms to use for plotting
             if time.time_ns() - ptrd >= rd:
                 ptrd = time.time_ns()
                 times += [(ptrd - start_time)/60e9]
-                board += [cali_fun(vals[1] -  vals[0])]
-                chip += [cali_fun(vals[2] -  vals[0])]
-                well += [b_bias*cali_fun(vals[1] -  vals[0]) + (1-b_bias)*cali_fun(vals[2] - vals[0])]
-                # print(f"{times[-1]:.3f}\t{board[-1]:.3f}\t{chip[-1]:.3f}\t{well[-1]:.3f}")
-            chip_temp = well[-1]
+                board += [cali_fun(values[1] -  values[0])]
+                chip += [cali_fun(values[2] -  values[0])]
+                well_temp = b_bias*cali_fun(values[1] -  values[0]) + (1-b_bias)*cali_fun(values[2] -  values[0])
+                well += [well_temp]
         except Exception as e:
-            print(e)
+            print(f'Exception in run_pid: {e}')
 
 
 def start_pid():
@@ -147,7 +147,7 @@ def run(port):
     server_address = ('', port)
     httpd = HTTPServer(server_address, handler_class)
     print("Python server started")
-    cam4_server.setup()
+    cam4_server.setup_camera()
     print("Camera setup done")
     print("System ready")
     try:
@@ -155,6 +155,8 @@ def run(port):
     except KeyboardInterrupt:
         pass
     httpd.server_close()
+    GPIO.cleanup()
+    print('\n\nGPIO cleaned up')
 
 
 if __name__ == "__main__":

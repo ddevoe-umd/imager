@@ -7,9 +7,27 @@
   outline: 2px solid gray;
 }
 
+.image_class {
+  height: 480px;
+  width: 640px;
+  margin: 10px auto;
+  outline: 2px solid gray;
+}
+
 .results {
   max-width: 920px;
   margin: 10px auto;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .buttons {

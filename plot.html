@@ -9,16 +9,22 @@
 
 <body>
 
-<div class="buttons">
+<div class="button-container">
+<div class="left-buttons">
   <button id="start" class="button-84" role="button" onclick="startAssay()" > Start </button>
   <button id="stop" class="button-84" onclick="endAssay()" > End </button>
   <button id="analyze" class="button-84" onclick="analyzeData()" > Analyze </button>
+</div>
+  <button id="getImage" class="button-84" role="button" onclick="getImage()" > Get Chip Image </button>
 </div>
 
 <div class="chart" id="rawDataChart"></div>
 <div class="chart" id="temperatureChart"></div>
 <div class="chart" id="filteredDataChart"></div>
 <div class="chart" id="ttpChart"></div>
+<div class="image_class">
+  <img id="image" alt="Base64 Encoded Image" />
+</div>
 
 <div class="results">
   <div class="results-text" id="results-heading"></div>
@@ -122,6 +128,18 @@ async function getData() {
 	}
 }
 
+async function getImage() {
+	let message = 'getImage';
+	let data = '';
+	let response = await queryServer(JSON.stringify([message,data]));
+  if (response.ok) {
+		results = await response.text();
+		const base64Image = results;
+		let results_array = results.split(",");
+		document.getElementById('image').src = base64Image;
+	}
+}
+
 async function analyzeData() {
   let message = 'analyze';
 	let data = currentFileName;
@@ -148,16 +166,16 @@ async function analyzeData() {
 function getWellNames() {
 	return([
 		"MecA",
-		"MecA",
-		"MecA",
 		"nuc",
-		"nuc",
-		"nuc",
-		"FemB",
-		"FemB",
 		"FemB",
 		"+ctr",
-		"-ctr",
+		"MecA",
+		"nuc",
+		"FemB",
+		"+ctr",
+		"MecA",
+		"nuc",
+		"FemB",
 		"-ctr"
 		])
 }
@@ -167,43 +185,43 @@ function setupAmplificationChart(targetContainer) {
 	let wellNames = getWellNames();
 	let lineColors = [
 		"#ff0000",
-		"#ff0000",
-		"#ff0000",
 		"#00ff00",
-		"#00ff00",
-		"#00ff00",
-		"#0000ff",
-		"#0000ff",
 		"#0000ff",
 		"#000000",
+		"#ff0000",
+		"#00ff00",
+		"#0000ff",
 		"#000000",
+		"#ff0000",
+		"#00ff00",
+		"#0000ff",
 		"#000000"
 	]
 	let lineDashTypes = [
 		"solid",
 		"solid",
 		"solid",
-		"solid",
-		"solid",
-		"solid",
+		"dash",
 		"solid",
 		"solid",
 		"solid",
 		"dash",
-		"dash",
+		"solid",
+		"solid",
+		"solid",
 		"dot"
 	]
 	let isInLegend = [
 		true,
-		false,
-		false,
+		true,
+		true,
 		true,
 		false,
 		false,
-		true,
 		false,
 		false,
-		true,
+		false,
+		false,
 		false,
 		true
 	]
