@@ -18,12 +18,18 @@
   <button id="getImage" class="button-84" role="button" onclick="getImage()" > Get Chip Image </button>
 </div>
 
-<div class="chart" id="rawDataChart"></div>
-<div class="chart" id="temperatureChart"></div>
-<div class="chart" id="filteredDataChart"></div>
-<div class="chart" id="ttpChart"></div>
-<div class="image_class">
-  <img id="image" alt="Base64 Encoded Image" />
+<div class="chart-container">
+  <div class="row">
+    <div class="chart" id="rawDataChart">Fluorescence Data</div>
+    <div class="chart" id="temperatureChart">Chip Temperature</div>
+  </div>
+  <div class="row">
+    <div class="chart" id="filteredDataChart">Filtered Data</div>
+    <div class="chart" id="ttpChart">Times to Positive</div>
+  </div>
+  <div class="image_class">
+    <img id="image" alt="Base64 Encoded Image" />
+  </div>
 </div>
 
 <div class="results">
@@ -71,6 +77,24 @@ window.onload = function () {
 let assayTimer; // timer for running an assay
 let sampleInterval = 2500;   // data sampling interval (msec)
 let currentFileName;   // data file from most recent assay
+
+// Set up arrangement of targets in each well
+// starting at upper left, and moving row by row
+// from left to right:
+const wellNames = [
+		"MecA", "Nuc", "FemB", "Ctrl+",
+		"MecA", "Nuc", "FemB", "Ctrl+",
+		"MecA",	"Nuc", "FemB", "Ctrl-"
+		];
+
+// Define chart display properties for each target:
+const target_dict = {
+  "MecA": ["#ff0000", "solid", true],   // color, linetype, legend flag
+  "FemB": ["#00ff00", "solid", true],
+  "Nuc": ["#0000ff", "solid", true],
+  "Ctrl+": ["#000000", "dash", true],
+  "Ctrl-": ["#000000", "dot", true]
+};
 
 async function queryServer(message) {
 	let url = "http://raspberrypi.local:8080";
@@ -163,81 +187,22 @@ async function analyzeData() {
 
 }
 
-function getWellNames() {
-	return([
-		"MecA",
-		"nuc",
-		"FemB",
-		"+ctr",
-		"MecA",
-		"nuc",
-		"FemB",
-		"+ctr",
-		"MecA",
-		"nuc",
-		"FemB",
-		"-ctr"
-		])
-}
 
 function setupAmplificationChart(targetContainer) {
 	let wellArray = [[],[],[],[],[],[],[],[],[],[],[],[]];
-	let wellNames = getWellNames();
-	let lineColors = [
-		"#ff0000",
-		"#00ff00",
-		"#0000ff",
-		"#000000",
-		"#ff0000",
-		"#00ff00",
-		"#0000ff",
-		"#000000",
-		"#ff0000",
-		"#00ff00",
-		"#0000ff",
-		"#000000"
-	]
-	let lineDashTypes = [
-		"solid",
-		"solid",
-		"solid",
-		"dash",
-		"solid",
-		"solid",
-		"solid",
-		"dash",
-		"solid",
-		"solid",
-		"solid",
-		"dot"
-	]
-	let isInLegend = [
-		true,
-		true,
-		true,
-		true,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		false,
-		true
-	]
+
 	// Set up plot info:
 	let plotInfo = [];
 	for (let i=0; i<wellArray.length; i++) {
 		plotInfo.push(
 		{ 	
 			type: "line",
-			showInLegend: isInLegend[i],
 			name: wellNames[i],
 			dataPoints: wellArray[i],
-			color: lineColors[i],
-			lineDashType: lineDashTypes[i]
-		}
-		)
+      color: target_dict[wellNames[i]][0],
+			lineDashType: target_dict[wellNames[i]][1],
+			showInLegend: target_dict[wellNames[i]][2]
+		})
 	}
 	let chart = new CanvasJS.Chart(targetContainer, {
 		zoomEnabled: true,
@@ -257,7 +222,7 @@ function setupAmplificationChart(targetContainer) {
 		legend: {
 			cursor:"pointer",
 			verticalAlign: "top",
-			fontSize: 16,
+			fontSize: 12,
 			fontColor: "dimGrey",
 			itemclick : toggleDataSeries
 		},
@@ -308,7 +273,7 @@ function setupTemperatureChart(targetContainer) {
 		legend: {
 			cursor:"pointer",
 			verticalAlign: "top",
-			fontSize: 16,
+			fontSize: 12,
 			fontColor: "dimGrey",
 			itemclick : toggleDataSeries
 		},
