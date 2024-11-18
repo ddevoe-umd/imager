@@ -6,7 +6,9 @@ Hardware:
 
 Installation 
 ------------
-* setup.sh (installs required Python modules)
+1. Run setup.sh (installs required Python modules)
+2. Edit /etc/rc.local: 
+	nohup python3 -u ~pi/imager/python_server.py > ~pi/imager/nohup.out &
 
 Operation:
 -----------------
@@ -37,3 +39,4 @@ Client:
 	- style sheet for plot.html
 * js/canvasjs.min.js
 	- Javascript code for plotting (js folder must be in same directory as plot.html)
+
