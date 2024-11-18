@@ -21,14 +21,14 @@ res = (w,h)
 cam = Picamera2()
 
 # Data storage:
-datafile_path = 'data/'
+data_directory = 'data'
 
 LED_PIN = 13
 
 # Set up list containing upper left corner of all ROIs:
 well_cols = 4   # number of well columns
 well_rows = 3   # number of well rows
-roi_upper_left = (254,165)   # upper left ROI coordinates
+roi_upper_left = (254,165)   # cordinates for upper left corner of upper left ROI
 roi_spacing = 60     # spacing (x & y) between ROI centers
 roi_width = 12
 roi_height = 28 
@@ -61,6 +61,7 @@ def setup_camera():    # Set up camera
         "AwbEnable": False,
         "ColourGains": (1.2,1.0)
         })
+    os.makedirs(data_directory, exist_ok=True)
     time.sleep(3)   # time to stabilize settings
 
 def get_image_data():    # Extract fluorescence measurements from ROIs in image
@@ -96,7 +97,7 @@ def get_image():       # Return a full image with ROI boxes added
     image = cam.capture_array("main")
     cam.stop()
     GPIO.output(LED_PIN, GPIO.LOW)
-    
+    print('cam4_server: image acquired')
     pil_image = image_with_ROIs(image)  # Add ROIs to image
     buffer = BytesIO()     # create a buffer to hold the JPG image
     pil_image.save(buffer, format="JPEG")    # Convert image to JPG
@@ -108,12 +109,12 @@ def end_imaging():
     # Rename temp data file:
     date_str = time.strftime("%Y%m%d_%Hh%Mm%Ss")
     output_filename = 'data_' + date_str + '.csv'
-    os.rename(datafile_path + 'temp_data.csv', datafile_path + output_filename)
-    with open(datafile_path + 'temp_data.csv', 'w') as f:
+    os.rename(data_directory + '/temp_data.csv', data_directory + '/' + output_filename)
+    with open(data_directory + '/temp_data.csv', 'w') as f:
         pass      # Delete contents of the temp data file
     return(output_filename)
 
 def analyze_data(filename):
-    results = filter(datafile_path + filename)
+    results = filter(datafile_directory + '/' + filename)
     return(results)
 
