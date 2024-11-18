@@ -76,7 +76,6 @@ class S(BaseHTTPRequestHandler):
             self.wfile.write(results.encode('utf-8'))
         if action == 'getData':          # Capture & analyze single camera image
             results = cam4_server.get_image_data()
-            print(results)
             results.append(well_temp)
             self.wfile.write(",".join([str(x) for x in results]).encode('utf-8'))
         elif action == 'end':            # Turn off PID loop and rename final data file
