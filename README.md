@@ -20,8 +20,7 @@ Operation:
 Pi:
 -----------------
 * python_server.py
-	- launch on boot via /etc/rc.local
-	- ...or start via: nohup python3 -u python_server.py &
+	- set up to launch on boot via /etc/rc.local
 	- handles all Javascript client <--> Python server communication
 	- manages PID control of heater
 	- access cam4_server.py to send data to client
