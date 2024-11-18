@@ -30,7 +30,7 @@ Pi:
 * filter_data.py
 	- filter noise and evaluate time-to-positive values
 
-Laptop:
+Client:
 --------------
 * plot.html
 	- client user interface
