@@ -1,6 +1,5 @@
-# from:
-# https://gist.github.com/mdonkers/63e115cc0c79b4f6b8b3a6b797e485c7
-
+# Run at startup via rc.local
+#
 # Start in background, with stdout logged to nohup.out:
 # nohup python3 -u python_server.py &
 
@@ -61,16 +60,15 @@ class S(BaseHTTPRequestHandler):
         self.wfile.write(",".join([str(x) for x in results]).encode('utf-8'))
 
     def do_POST(self):
-        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-        post_data = self.rfile.read(content_length) # <--- Gets the data itself
+        content_length = int(self.headers['Content-Length'])  # gets the size of data
+        post_data = self.rfile.read(content_length)           # get the data
         self._set_response()
         post_data_decoded = post_data.decode('utf-8')
         post_dict = dict(pair.split('=') for pair in post_data_decoded.split('&'))
         info = json.loads(post_dict['todo'])
         action = info[0]
         data = info[1]
-        print(action)
-        print(data)
+        print(f'{action}: {data}')
         if action == 'start':            # Start the PID loop for temp control
             start_pid()
         if action == 'getImage':         # Get an image of the chip
@@ -78,6 +76,7 @@ class S(BaseHTTPRequestHandler):
             self.wfile.write(results.encode('utf-8'))
         if action == 'getData':          # Capture & analyze single camera image
             results = cam4_server.get_image_data()
+            print(results)
             results.append(well_temp)
             self.wfile.write(",".join([str(x) for x in results]).encode('utf-8'))
         elif action == 'end':            # Turn off PID loop and rename final data file
