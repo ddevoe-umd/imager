@@ -7,8 +7,8 @@ Hardware:
 Installation 
 ------------
 1. Run setup.sh (installs required Python modules)
-2. Edit /etc/rc.local: 
-	nohup python3 -u ~pi/imager/python_server.py > ~pi/imager/nohup.out &
+2. Edit `/etc/rc.local` with the following line to run server code at boot:
+   `nohup python3 -u ~pi/imager/python_server.py > ~pi/imager/nohup.out &`
 
 Operation:
 -----------------
@@ -22,10 +22,10 @@ Operation:
 Pi:
 -----------------
 * python_server.py
-	- set up to launch on boot via /etc/rc.local
+	- set up to launch on boot via `/etc/rc.local`
 	- handles all Javascript client <--> Python server communication
 	- manages PID control of heater
-	- access cam4_server.py to send data to client
+	- access `cam4_server.py` to send data to client
 * cam4_server.py
 	- get data from the camera
 * filter_data.py
