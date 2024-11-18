@@ -16,13 +16,17 @@
   /*max-width: 920px;*/
   /*margin: 10px auto;*/
   outline: 2px solid gray;
+  background-color: #EBEBEB;
 }
 
-.image_class {
+.image_container {
   height: 480px;
   width: 640px;
-  margin: 10px auto;
+  /*margin: 10px auto;*/
+  margin-right: auto;
+  margin-left: auto;
   outline: 2px solid gray;
+  background-color: #EBEBEB;
 }
 
 .results {
@@ -34,6 +38,7 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
+  margin: 10px auto;
 }
 
 .left-buttons {
