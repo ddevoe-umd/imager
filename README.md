@@ -1,11 +1,12 @@
 
-Developed on Pi Zero 2 W (Python3, Raspberry Pi OS)
+Hardware:
+---------
+* Raspberry Pi Zero 2 W (Python3, Raspberry Pi OS)
+* Pi Camera (InnoMaker CAM OV5647, 5MP)
 
 Installation 
 ------------
-chmod 755 setup.sh
-setup.sh
-	- install needed Python modules
+* setup.sh (installs required Python modules)
 
 Operation:
 -----------------
@@ -18,22 +19,22 @@ Operation:
 
 Pi:
 -----------------
-python_server.py
+* python_server.py
 	- launch on boot via /etc/rc.local
 	- ...or start via: nohup python3 -u python_server.py &
 	- handles all Javascript client <--> Python server communication
 	- manages PID control of heater
 	- access cam4_server.py to send data to client
-cam4_server.py
+* cam4_server.py
 	- get data from the camera
-filter_data.py
+* filter_data.py
 	- filter noise and evaluate time-to-positive values
 
-Client:
+Laptop:
 --------------
-plot.html
+* plot.html
 	- client user interface
-style.css
+* css/style.css
 	- style sheet for plot.html
-js/canvasjs.min.js
+* js/canvasjs.min.js
 	- Javascript code for plotting (js folder must be in same directory as plot.html)
