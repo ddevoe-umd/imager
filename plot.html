@@ -32,22 +32,6 @@
   </div>
 </div>
 
-<div class="results">
-  <div class="results-text" id="results-heading"></div>
-  <div class="results-text" id="result-1"></div>
-  <div class="results-text" id="result-2"></div>
-  <div class="results-text" id="result-3"></div>
-  <div class="results-text" id="result-4"></div>
-  <div class="results-text" id="result-5"></div>
-  <div class="results-text" id="result-6"></div>
-  <div class="results-text" id="result-7"></div>
-  <div class="results-text" id="result-8"></div>
-  <div class="results-text" id="result-9"></div>
-  <div class="results-text" id="result-10"></div>
-  <div class="results-text" id="result-11"></div>
-  <div class="results-text" id="result-12"></div>
-</div>
-
 </body>
 
 
@@ -77,10 +61,12 @@ window.onload = function () {
 let assayTimer; // timer for running an assay
 let sampleInterval = 2500;   // data sampling interval (msec)
 let currentFileName;   // data file from most recent assay
+let times;   // assay time array for plot axes
 
 // Set up arrangement of targets in each well
 // starting at upper left, and moving row by row
 // from left to right:
+
 const wellNames = [
 		"MecA", "Nuc", "FemB", "Ctrl+",
 		"MecA", "Nuc", "FemB", "Ctrl+",
@@ -89,12 +75,13 @@ const wellNames = [
 
 // Define chart display properties for each target:
 const target_dict = {
-  "MecA": ["#ff0000", "solid", true],   // color, linetype, legend flag
-  "FemB": ["#00ff00", "solid", true],
-  "Nuc": ["#0000ff", "solid", true],
-  "Ctrl+": ["#000000", "dash", true],
-  "Ctrl-": ["#000000", "dot", true]
+  "MecA": ["#1f009c", "solid"],   // color, linetype
+  "FemB": ["#006aa8", "solid"],
+  "Nuc": ["#338f4c", "solid"],
+  "Ctrl+": ["#363636", "dash"],
+  "Ctrl-": ["#363636", "dot"]
 };
+
 
 async function queryServer(message) {
 	let url = "http://raspberrypi.local:8080";
@@ -171,39 +158,60 @@ async function analyzeData() {
 	if (response.ok) {
 		results = await response.text();
 		let data = JSON.parse(results);
+		console.log(data)
     let ttp = data[0];
     let xy = data[1];
     displayFilteredData(xy);
-		displayTimeToPositiveData(ttp);
-		document.getElementById("result-1").innerHTML = "result 1";
-
-		// Display TTP values as text:
-		//for (let i=0; i<12; i++) {
-    //    let display_str = "TTP = " + ttp[i].toString();
-		//    let element = "result-"+(i+1).toString();
-		//	  document.getElementById(element).innerHTML = display_str;
-		//}
+		displayTTP(ttp);
 	}
-
 }
 
+
+// Function to display/hide grouped data sets in charts:
+function onLegendClick(e) {
+  var groupSelected = e.dataSeries.group;
+  for(var i = 0; i < e.chart.data.length; i++) {
+    if(e.chart.options.data[i].group === groupSelected) {
+      if (typeof (e.chart.options.data[i].visible) === "undefined" || e.chart.options.data[i].visible) {
+        e.chart.options.data[i].visible = false;
+      } else {
+        e.chart.options.data[i].visible = true;
+      }
+    }
+  }
+}
 
 function setupAmplificationChart(targetContainer) {
 	let wellArray = [[],[],[],[],[],[],[],[],[],[],[],[]];
 
 	// Set up plot info:
 	let plotInfo = [];
-	for (let i=0; i<wellArray.length; i++) {
-		plotInfo.push(
-		{ 	
-			type: "line",
-			name: wellNames[i],
-			dataPoints: wellArray[i],
-      color: target_dict[wellNames[i]][0],
-			lineDashType: target_dict[wellNames[i]][1],
-			showInLegend: target_dict[wellNames[i]][2]
-		})
-	}
+
+	let g = 1;   // group number used to group target sets in charts
+	for (const key in target_dict) {
+		let key_found = false;
+		for (let i=0; i<wellNames.length; i++) {
+      if (wellNames[i] == key) {
+      	// Set up plot data & shared plot attributes:
+				data_dict = {	
+					type: "line",
+					group: g,
+					dataPoints: wellArray[i],
+		      color: target_dict[wellNames[i]][0],
+					lineDashType: target_dict[wellNames[i]][1]
+				};
+				// Only show each gene target in the legend once:
+				if (!key_found) {
+					data_dict.name = key;
+					data_dict.showInLegend = true;
+					key_found = true;
+				}
+				plotInfo.push(data_dict);
+      }
+    }
+    g += 1;
+  }
+
 	let chart = new CanvasJS.Chart(targetContainer, {
 		zoomEnabled: true,
 		title: {
@@ -220,23 +228,15 @@ function setupAmplificationChart(targetContainer) {
 			shared: true
 		},
 		legend: {
-			cursor:"pointer",
-			verticalAlign: "top",
-			fontSize: 12,
-			fontColor: "dimGrey",
-			itemclick : toggleDataSeries
-		},
+	    cursor:"pointer",
+	    itemclick: function(e) {
+	      onLegendClick(e);
+	      e.chart.render();
+	    }
+	  },
 		data: plotInfo
 	});
-	function toggleDataSeries(e) {
-		if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-			e.dataSeries.visible = false;
-		}
-		else {
-			e.dataSeries.visible = true;
-		}
-		chart.render();
-	}
+
 	chart.render();
 	return [chart, wellArray]
 }
@@ -250,6 +250,7 @@ function setupTemperatureChart(targetContainer) {
 	plotInfo.push(
 	{ 	
 		type: "line",
+    color: "#BB2222",
 		showInLegend: true,
 		name: "Temperature",
 		dataPoints: temperature
@@ -307,12 +308,14 @@ async function startAssay() {
 
 	let time = new Date;
 	let startTime = time.getTime();
+  times = []
 
   nullData = await startPID();    // Tell Python to start the PID controller
-
+  
 	async function updateChart() {
 		let now = new Date();
 		minutes = (now - startTime)/1000/60;
+    times.push(minutes)
 
 		newData = await getData();   		// Get data from Python
 
@@ -353,18 +356,23 @@ function displayFilteredData(data) {
 }
 
 
-function displayTimeToPositiveData(ttpData) {
-    ttpBars = [];
-    let wellNames = getWellNames();
-	for (let i=0; i<wellNames.length; i++) {
-		ttpBars.push({
-			y: ttpData[i],
-			label: wellNames[i]
-		});
-	}
+function displayTTP(ttpData) {
+  ttpBars = [];
+  for (const key in target_dict) {
+		for (let i=0; i<wellNames.length; i++) {
+			if (wellNames[i] == key) {
+				ttpBars.push({
+					y: ttpData[i],
+					label: key,
+					color: target_dict[key][0]
+				});
+			}
+		}
+  }
 	var chart = new CanvasJS.Chart("ttpChart", {
 		animationEnabled: true,
 		theme: "light2",   // "light1", "light2", "dark1", "dark2"
+		axisX:{ interval: 1 },   // show all axis labels
 		data: [{        
 			type: "column",  
 			showInLegend: true, 
@@ -374,8 +382,10 @@ function displayTimeToPositiveData(ttpData) {
 		}]
 	})
 	chart.render();
-	//chart.axisY[0].set('minimum',-1);
+	chart.axisY[0].set('minimum',0);   // Only show results with positive TTPs
 }
+
+
 
 </script>
 

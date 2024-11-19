@@ -19,11 +19,10 @@ def filter(filename):
     ttp = []
     with open(filename) as f:
         df = pd.read_csv(f, header=None)
+        cut_number = 0        # number of initial data points to ignore
         t = df.iloc[:, 0].tolist()
-        cut_number = 0        # initial data points to ignore
         t = t[cut_number:]    # Remove initial data points
         t = [float(val-t[0]) for val in t]   # start time axis at t=0
-        
         t = [val/60.0 for val in t]   # Convert seconds -> minutes
     
         cols = df.columns[1:]
@@ -39,11 +38,11 @@ def filter(filename):
                     y[i] = y[i-1]
             
             # Filter requirements:
-            cutoff = 0.2/60    # cutoff frequency (0.05 - 0.2 Hz is a good range)
-            T = t[-1]       # Sample Period
-            n = len(t)      # total number of samples
-            fs = T/n        # sample rate, Hz
-            order = 6       # filter order       
+            cutoff = 0.2/60    # cutoff frequency (0.05 - 0.2 cycles/min is a good range)
+            T = t[-1]          # Sample Period
+            n = len(t)         # total number of samples
+            fs = T/n           # sample rate, Hz
+            order = 6          # filter order       
     
             yf = butter_lowpass_filter(y, cutoff, fs, order)
             

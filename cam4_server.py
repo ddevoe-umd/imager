@@ -118,6 +118,6 @@ def end_imaging():
     return(output_filename)
 
 def analyze_data(filename):
-    results = filter(data_directory + '/' + filename)
+    results = filter(data_directory + '/' + filename)   # run filter function from filter_data.py
     return(results)
 
