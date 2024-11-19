@@ -27,8 +27,11 @@
     <div class="chart" id="filteredDataChart">Filtered Data</div>
     <div class="chart" id="ttpChart">Time to Positive</div>
   </div>
-  <div class="image_container">
-    <img id="image" alt="Chip Image" />
+<div class="log-image-container">
+  <div class="row">
+	  <div class="image"><img id="image" alt="Chip Image" /></div>
+ 	  <div class="log" id="log">Server Log<br>___________<br></div>
+	  </div>
   </div>
 </div>
 
@@ -37,6 +40,7 @@
 
 <script>
 
+
 // Prevent system from sleeping
 // Does not work yet
 async function getScreenLock() {
@@ -44,7 +48,7 @@ async function getScreenLock() {
 		const wakeLock = await navigator.wakeLock.request('screen');
 		console.log('Wake Lock acquired:', wakeLock);
 	} catch(err) {
-		console.error('Error acquiring wake lock:', err);
+		console.log('Error acquiring wake lock:', err);
 	}
 	//return wakeLock;
 }
@@ -83,6 +87,15 @@ const target_dict = {
 };
 
 
+function customLog(message) {
+	console.log(message);            // display message on Javascript console
+	const log = document.getElementById("log");
+	log.innerHTML += message + "<br />";      // display message in HTML
+	//log.scrollTop = log.scrollHeight;      // scroll to bottom to show new message
+	log.scroll({ top: log.scrollHeight, behavior: 'smooth' });
+}
+
+
 async function queryServer(message) {
 	let url = "http://raspberrypi.local:8080";
 	let response = await fetch( url, {
@@ -97,10 +110,11 @@ async function queryServer(message) {
 async function startPID() {
 	let message = 'start';
 	let data = '';
+	customLog("startPID() called");
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
-		console.log(results);
+		customLog(results);
 		let results_array = results.split(",");
 		newData = [];
 		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
@@ -109,29 +123,32 @@ async function startPID() {
 }
 
 async function endAssay() {
+	customLog("endAssay() called");
 	document.getElementById("stop").disabled = true;
 	if (assayTimer) clearInterval(assayTimer);
 	document.getElementById("start").disabled = false;
-
 	let message = 'end';
   let data = '';
 	let response = await queryServer(JSON.stringify([message,data]));
 	if (response.ok) {
 		results = await response.text();
+		customLog("Server response:")
+		customLog(results);
 		currentFileName = results;
-		console.log(results);
 		document.getElementById("analyze").disabled = false;
 		document.getElementById('analyze').innerText = "Analyze " + currentFileName;
 	}
 }
 
 async function getData() {
+	customLog("getData() called");
 	let message = 'getData';
 	let data = '';
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
-		console.log(results);
+		customLog("Server response:")
+		customLog(results);
 		let results_array = results.split(",");
 		newData = [];
 		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
@@ -140,11 +157,13 @@ async function getData() {
 }
 
 async function getImage() {
+	customLog("getImage() called");
 	let message = 'getImage';
 	let data = '';
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
+		customLog("Image data received")
 		const base64Image = results;
 		let results_array = results.split(",");
 		document.getElementById('image').src = base64Image;
@@ -152,13 +171,15 @@ async function getImage() {
 }
 
 async function analyzeData() {
+	customLog("analyzeData() called");
   let message = 'analyze';
 	let data = currentFileName;
 	let response = await queryServer(JSON.stringify([message,data]));
 	if (response.ok) {
 		results = await response.text();
 		let data = JSON.parse(results);
-		console.log(data)
+		customLog("Server response: ");
+		customLog(data)
     let ttp = data[0];
     let xy = data[1];
     displayFilteredData(xy);
