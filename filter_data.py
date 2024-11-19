@@ -22,7 +22,8 @@ def filter(filename):
         t = df.iloc[:, 0].tolist()
         cut_number = 0    # initial data points to ignore
         t = t[cut_number:]
-    
+        t = [val/60.0 for val in t]   # Convert seconds -> minutes
+
         cols = df.columns[1:]
     
         for idx in range(1,13):
