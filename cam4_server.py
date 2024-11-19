@@ -96,7 +96,7 @@ def get_image():       # Return a PIL image with ROI boxes added
     # Acquire an image:
     cam.start()
     GPIO.output(LED_PIN, GPIO.HIGH)
-    image = cam.capture_array("main")
+    image = cam.capture_image("main")   # capture as PIL image
     cam.stop()
     GPIO.output(LED_PIN, GPIO.LOW)
     print('cam4_server: image acquired')
