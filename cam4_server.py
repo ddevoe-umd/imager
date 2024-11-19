@@ -65,7 +65,7 @@ def setup_camera():    # Set up camera
 def roi_avg(image, roi):   # Return average of pixel values in ROI
     r,b,g = 0,0,0
     px,py = roi
-    count = roi_width * roi_height
+    count = float(roi_width * roi_height)
     for x in range(int(px),int(px+roi_width)):
         for y in range(int(py),int(py+roi_height)):
             r += image.getpixel(roi)[0] / count
@@ -118,6 +118,6 @@ def end_imaging():
     return(output_filename)
 
 def analyze_data(filename):
-    results = filter(datafile_directory + '/' + filename)
+    results = filter(data_directory + '/' + filename)
     return(results)
 
