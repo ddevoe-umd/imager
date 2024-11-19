@@ -32,9 +32,8 @@ def filter(filename):
             y = y[cut_number:]
             t = t[cut_number:]
     
-            t0 = float(t[0])   # need to shift to t=0 for 1st point
-            t = [float(val)-t0 for val in t]
             y = [float(val) for val in y]
+            t = [float(val-t[0]) for val in t]   # start time axis at t=0
     
             # Remove spurious data:
             for i,val in enumerate(y):
