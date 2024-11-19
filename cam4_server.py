@@ -32,7 +32,7 @@ roi_upper_left = (254,165)   # cordinates for upper left corner of upper left RO
 roi_spacing = 60     # spacing (x & y) between ROI centers
 roi_width = 12
 roi_height = 28 
-ROIs = []            # list of all ROIs
+ROIs = []            # list of upper left corners for all ROIs
 for i in range(well_rows):
     for j in range(well_cols):
         x = roi_upper_left[0] + roi_spacing*j
@@ -40,8 +40,8 @@ for i in range(well_rows):
         ROIs.append((x,y))
 
 # Add ROIs to a captured image
-def image_with_ROIs(image):
-    pil_image = Image.fromarray(image)
+def image_with_ROIs(image_data):
+    pil_image = Image.fromarray(image_data)
     draw = ImageDraw.Draw(pil_image)
     for roi in ROIs:
         roi_lower_right = [0,0]
@@ -67,22 +67,32 @@ def setup_camera():    # Set up camera
 def get_image_data():    # Extract fluorescence measurements from ROIs in image
     cam.start()
     GPIO.output(LED_PIN, GPIO.HIGH)   # Turn on LED
-    data = cam.capture_array("main")
+    image_data = cam.capture_array("main")
     cam.stop()
     GPIO.output(LED_PIN, GPIO.LOW)    # Turn off LED
 
     # Get average value within each well ROI:
     results = [int(time.time())]  # 1st entry is the time stamp
-    for (px,py) in ROIs:
+
+    pil_image = Image.fromarray(image_data)
+    for roi in ROIs:
         r,b,g = 0,0,0
-        count = 0
+        px,py = roi
         for x in range(int(px),int(px+roi_width)):
             for y in range(int(py),int(py+roi_height)):
-                r += data[x][y][0]
-                g += data[x][y][1]
-                b += data[x][y][2]
-                count += 1
+                r += pil_image.getpixel(roi)[0]
+                g += pil_image.getpixel(roi)[1]
+                b += pil_image.getpixel(roi)[2]
         results.append(g)     # Green channel ~ 500 nm
+
+    """
+        for x in range(int(px),int(px+roi_width)):
+            for y in range(int(py),int(py+roi_height)):
+                r += image_data[x][y][0]
+                g += image_data[x][y][1]
+                b += image_data[x][y][2]
+        results.append(g)     # Green channel ~ 500 nm
+    """
 
     # Append new result to temp data file:
     with open('data/temp_data.csv', 'a') as f:
