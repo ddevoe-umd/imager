@@ -47,7 +47,7 @@ def image_with_ROIs(image):      # Add ROIs to a captured image
         roi_lower_right[1] = roi[1] + roi_height
         roi_lower_right = tuple(roi_lower_right)
         draw.rectangle([roi, roi_lower_right])
-    return(pil_image)
+    return(image)
 
 def setup_camera():    # Set up camera
     config = cam.create_still_configuration(main={"size": res})
