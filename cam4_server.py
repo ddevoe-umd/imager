@@ -85,11 +85,11 @@ def get_image_data():    # Extract fluorescence measurements from ROIs in image
         roi_sums.append(roi_sum(image, roi)[2])  # green channel
 
     # Add timestamp & new ROI sums to temp data file:
-    timestamps = [int(time.time())]          # 1st entry is the time stamp
+    timestamp = [int(time.time())]        # 1st entry is the time stamp
     with open('data/temp_data.csv', 'a') as f:
         writer = csv.writer(f, delimiter=',', lineterminator='\n')
-        # Add timestamp as 1st element of each data list:
-        writer.writerow([[t]+s for t,s in zip(timestamps,roi_sums)])
+        writer.writerow(timestamp + roi_sums)
+
 
     return(roi_sums)
 
