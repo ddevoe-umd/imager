@@ -22,7 +22,11 @@ def filter(filename):
         t = df.iloc[:, 0].tolist()
         cut_number = 0    # initial data points to ignore
         t = t[cut_number:]
+        
+        ###
         #t = [val/60.0 for val in t]   # Convert seconds -> minutes
+        t = [float(val-t[0]) for val in t]   # start time axis at t=0
+        ###
 
         cols = df.columns[1:]
     
@@ -31,10 +35,10 @@ def filter(filename):
     
             # Remove initial data points:
             y = y[cut_number:]
-            t = t[cut_number:]
+            #t = t[cut_number:]
     
             y = [float(val) for val in y]
-            t = [float(val-t[0]) for val in t]   # start time axis at t=0
+            #t = [float(val-t[0]) for val in t]   # start time axis at t=0
     
             # Remove spurious data:
             for i,val in enumerate(y):
