@@ -39,10 +39,8 @@ for i in range(well_rows):
         y = roi_upper_left[1] + roi_spacing*i
         ROIs.append((x,y))
 
-# Add ROIs to a captured image
-def image_with_ROIs(image_data):
-    pil_image = Image.fromarray(image_data)
-    draw = ImageDraw.Draw(pil_image)
+def image_with_ROIs(image):      # Add ROIs to a captured image
+    draw = ImageDraw.Draw(image)
     for roi in ROIs:
         roi_lower_right = [0,0]
         roi_lower_right[0] = roi[0] + roi_width
@@ -64,43 +62,37 @@ def setup_camera():    # Set up camera
     os.makedirs(data_directory, exist_ok=True)
     time.sleep(3)   # time to stabilize settings
 
+def roi_sum(image, roi, width, height):   # Return sum of pixel values in ROI
+    r,b,g = 0,0,0
+    px,py = roi
+    for x in range(int(px),int(px+width)):
+        for y in range(int(py),int(py+height)):
+            r += image.getpixel(roi)[0]
+            g += image.getpixel(roi)[1]
+            b += image.getpixel(roi)[2]
+    return((r,b,g))
+
 def get_image_data():    # Extract fluorescence measurements from ROIs in image
     cam.start()
-    GPIO.output(LED_PIN, GPIO.HIGH)   # Turn on LED
-    image_data = cam.capture_array("main")
+    GPIO.output(LED_PIN, GPIO.HIGH)     # Turn on LED
+    image = cam.capture_image("main")   # capture as PIL image
     cam.stop()
-    GPIO.output(LED_PIN, GPIO.LOW)    # Turn off LED
+    GPIO.output(LED_PIN, GPIO.LOW)      # Turn off LED
 
-    # Get average value within each well ROI:
-    results = [int(time.time())]  # 1st entry is the time stamp
-
-    pil_image = Image.fromarray(image_data)
+    # Get sums of pixel values within all ROIs:
+    roi_sums = []
     for roi in ROIs:
-        r,b,g = 0,0,0
-        px,py = roi
-        for x in range(int(px),int(px+roi_width)):
-            for y in range(int(py),int(py+roi_height)):
-                r += pil_image.getpixel(roi)[0]
-                g += pil_image.getpixel(roi)[1]
-                b += pil_image.getpixel(roi)[2]
-        results.append(g)     # Green channel ~ 500 nm
+        roi_sums.append(roi_sum(roi)[2])   # add green channel sum for each ROI
 
-    """
-        for x in range(int(px),int(px+roi_width)):
-            for y in range(int(py),int(py+roi_height)):
-                r += image_data[x][y][0]
-                g += image_data[x][y][1]
-                b += image_data[x][y][2]
-        results.append(g)     # Green channel ~ 500 nm
-    """
-
-    # Append new result to temp data file:
+    # Add timestamp & new ROI sums to temp data file:
+    timestamp = [int(time.time())]          # 1st entry is the time stamp
     with open('data/temp_data.csv', 'a') as f:
         writer = csv.writer(f, delimiter=',', lineterminator='\n')
-        writer.writerow(results)
-    return(results[1:])  # strip time stamp for javascript
+        writer.writerow([timestamp, roi_sums])
 
-def get_image():       # Return a full image with ROI boxes added
+    return(roi_sums)
+
+def get_image():       # Return a PIL image with ROI boxes added
     # Acquire an image:
     cam.start()
     GPIO.output(LED_PIN, GPIO.HIGH)
