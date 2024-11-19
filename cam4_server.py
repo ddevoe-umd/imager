@@ -82,7 +82,7 @@ def get_image_data():    # Extract fluorescence measurements from ROIs in image
     # Get sums of pixel values within all ROIs:
     roi_sums = []
     for roi in ROIs: 
-        roi_sums.append(roi_sum(roi)[2])  # green channel
+        roi_sums.append(roi_sum(image, roi)[2])  # green channel
 
     # Add timestamp & new ROI sums to temp data file:
     timestamp = [int(time.time())]          # 1st entry is the time stamp
