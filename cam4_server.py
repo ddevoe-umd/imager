@@ -62,11 +62,11 @@ def setup_camera():    # Set up camera
     os.makedirs(data_directory, exist_ok=True)
     time.sleep(3)   # time to stabilize settings
 
-def roi_sum(image, roi, width, height):   # Return sum of pixel values in ROI
+def roi_sum(image, roi):   # Return sum of pixel values in ROI
     r,b,g = 0,0,0
     px,py = roi
-    for x in range(int(px),int(px+width)):
-        for y in range(int(py),int(py+height)):
+    for x in range(int(px),int(px+roi_width)):
+        for y in range(int(py),int(py+roi_height)):
             r += image.getpixel(roi)[0]
             g += image.getpixel(roi)[1]
             b += image.getpixel(roi)[2]
@@ -81,8 +81,8 @@ def get_image_data():    # Extract fluorescence measurements from ROIs in image
 
     # Get sums of pixel values within all ROIs:
     roi_sums = []
-    for roi in ROIs:
-        roi_sums.append(roi_sum(roi)[2])   # add green channel sum for each ROI
+    for roi in ROIs: 
+        roi_sums.append(roi_sum(roi)[2])  # green channel
 
     # Add timestamp & new ROI sums to temp data file:
     timestamp = [int(time.time())]          # 1st entry is the time stamp
