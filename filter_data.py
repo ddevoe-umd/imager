@@ -1,4 +1,5 @@
-# Code to filter LAMP data
+# Code to filter LAMP data and calulate times to positive (TTPs)
+#
 # Will remove noise due to bubbles and spurious measurement errors
 
 import numpy as np
@@ -31,8 +32,8 @@ def filter(filename):
             y = y[cut_number:]
             t = t[cut_number:]
     
-            t0 = t[0]   # need to shift to t=0 for 1st point
-            t = [float(val-t0) for val in t]
+            t0 = float(t[0])   # need to shift to t=0 for 1st point
+            t = [float(val)-t0 for val in t]
             y = [float(val) for val in y]
     
             # Remove spurious data:
@@ -40,7 +41,7 @@ def filter(filename):
                 if val < 2 and i>0:
                     y[i] = y[i-1]
             
-            # Filter requirements.
+            # Filter requirements:
             cutoff = 0.2    # cutoff frequency (0.05 - 0.2 Hz is a good range)
             T = t[-1]       # Sample Period
             n = len(t)      # total number of samples
@@ -53,7 +54,7 @@ def filter(filename):
             y = [x-min(yf) for x in y]
             yf = [x-min(yf) for x in yf]
     
-            # normalize curves to max value:
+            # normalize to max value:
             y_norm = [x/max(yf) for x in y]
             yf_norm = [x/max(yf) for x in yf]
     
@@ -63,7 +64,6 @@ def filter(filename):
             ttp.append(get_ttp(t,yf_norm))
 
     all_data = [ttp, y_filtered_dict]
-    #return(y_filtered_dict)
     return(json.dumps(all_data))
 
 
@@ -79,8 +79,7 @@ def get_ttp(t,y):
             t_ = t[idx-npoints:idx+npoints]
             y_ = y[idx-npoints:idx+npoints]
             m,b = np.polyfit(t_, y_, 1)
-            print(f'm={m}, b={b}')
-            ttp = (y[idx]-b)/m   # project line onto x-axis
+            ttp = (y[idx]-b)/m   # x-axis intercept
     return ttp
         
 
