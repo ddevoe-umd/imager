@@ -90,7 +90,6 @@ def get_image_data():    # Extract fluorescence measurements from ROIs in image
         writer = csv.writer(f, delimiter=',', lineterminator='\n')
         # Add timestamp as 1st element of each data list:
         writer.writerow([[t]+s for t,s in zip(timestamps,roi_sums)])
-)
 
     return(roi_sums)
 
