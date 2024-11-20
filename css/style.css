@@ -1,13 +1,20 @@
 
+*:not(i, code, button, span, a) {
+  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .chart-container {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Space between rows */
+  gap: 20px;   /* Space between rows */
 }
 
 .row {
   display: flex;
-  gap: 20px; /* Space between columns */
+  width: 100%;
+  gap: 20px;   /* Space between columns */
 }
 
 .chart {
@@ -21,25 +28,39 @@
 
 .log-image-container {
   display: flex;
-  flex-direction: column;
-  gap: 20px; /* Space between rows */
+  gap: 20px;   /* Space between rows */
+}
+
+.log-image-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 250px;
+  gap: 20px;   /* Space between columns */
 }
 
 .image {
-  height: 480px;
-  width: 640px;
+  max-width: 640px;
+  max-height: 480px;
+  height: 100%;
+  width: 50%;
   outline: 2px solid gray;
   background-color: #EBEBEB;
 }
 
+.image img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
 .log {
   flex: 1;
-  height: 480px;
+  min-height: 250px;
+  max-height: 480px;
   overflow-wrap: break-word;
   overflow-y: scroll; /* Enable vertical scrollbar */
   overflow-x: hidden; /* Hide horizontal scrollbar */
-  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-  font-size: 12px;
   outline: 2px solid gray;
   background-color: #EBEBEB;
 }
@@ -59,12 +80,6 @@
 .buttons {
   max-width: 920px; 
   margin: 10px auto;
-}
-
-.results-text {
-  font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-  font-size: 14px;
-  line-height: 1.4;
 }
 
 
