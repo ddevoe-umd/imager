@@ -148,6 +148,7 @@ async function endAssay() {
 		currentFileName = results;
 		document.getElementById("analyze").disabled = false;
 		document.getElementById('analyze').innerText = "Analyze " + currentFileName;
+		document.getElementById("shutdown").disabled = false;
 	}
 }
 
@@ -203,6 +204,7 @@ async function shutdown() {
 	customLog("System is powering off!!!");
 	document.getElementById("stop").disabled = true;
 	document.getElementById("start").disabled = true;
+	document.getElementById("analyze").disabled = true;
 
 	let message = 'shutdown';
   let data = '';
@@ -348,6 +350,7 @@ async function startAssay() {
 	document.getElementById("stop").disabled = false;
 	document.getElementById("analyze").disabled = true;
 	document.getElementById('analyze').innerText = "Analyze";
+	document.getElementById("shutdown").disabled = true;
 
 	let [amplificationChart, wellArray] = setupAmplificationChart('rawDataChart')
 	let [temperatureChart, temperature] = setupTemperatureChart('temperatureChart')

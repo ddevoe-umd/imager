@@ -160,7 +160,7 @@ def run(port):
 def shutdown():
     GPIO.cleanup()
     from subprocess import call
-    call("sudo shutdown --poweroff", shell=True)
+    call("sudo shutdown -h now", shell=True)
 
 
 if __name__ == "__main__":
