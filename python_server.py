@@ -20,7 +20,7 @@ from gpiozero import MCP3008
 
 # PID:
 PWM_PIN = 19
-FAN = 14
+FAN = 15
 LED_PIN = 13
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LED_PIN, GPIO.OUT)
@@ -29,7 +29,7 @@ GPIO.setup(PWM_PIN, GPIO.OUT)
 pwm = GPIO.PWM(PWM_PIN,490)
 pid = PID(Kp=13, Ki=0.17, Kd=1.2, setpoint=60)     # Can add sample_time, output_limits, etc.
 pid.output_limits = (0,100)
-b_bias = 0.48                   # value for linear interpolation of temperature
+b_bias = 0.82                   # value for linear interpolation of temperature
 well_temp = 0                   # current well temperature
 
 # Start heater PWM:
@@ -86,7 +86,8 @@ class S(BaseHTTPRequestHandler):
             results = cam4_server.analyze_data(data)
             #self.wfile.write(json.dumps(results).encode('utf-8'))
             self.wfile.write(results.encode('utf-8'))
-
+        elif action == 'shutdown':       # Power down the Pi
+            shutdown()
 
 # Calibration function for PWM (temperature control):
 def cali_fun(y_data):
@@ -155,6 +156,11 @@ def run(port):
     httpd.server_close()
     GPIO.cleanup()
     print('\n\nGPIO cleaned up')
+
+def shutdown():
+    GPIO.cleanup()
+    from subprocess import call
+    call("sudo shutdown --poweroff", shell=True)
 
 
 if __name__ == "__main__":

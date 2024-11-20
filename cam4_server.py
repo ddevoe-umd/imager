@@ -28,8 +28,8 @@ LED_PIN = 13
 # Set up list containing upper left corner of all ROIs:
 well_cols = 4   # number of well columns
 well_rows = 3   # number of well rows
-roi_upper_left = (254,165)   # cordinates for upper left corner of upper left ROI
-roi_spacing = 60     # spacing (x & y) between ROI centers
+roi_upper_left = (200,185)   # cordinates for upper left corner of upper left ROI
+roi_spacing = 62     # spacing (x & y) between ROI centers
 roi_width = 12
 roi_height = 28 
 ROIs = []            # list of upper left corners for all ROIs
