@@ -111,7 +111,7 @@ def get_image():       # Return a PIL image with ROI boxes added
 def end_imaging():
     # Rename temp data file:
     date_str = time.strftime("%Y%m%d_%Hh%Mm%Ss")
-    output_filename = 'data_' + date_str + '.csv'
+    output_filename = date_str + '.csv'
     os.rename(data_directory + '/temp_data.csv', data_directory + '/' + output_filename)
     with open(data_directory + '/temp_data.csv', 'w') as f:
         pass      # Delete contents of the temp data file

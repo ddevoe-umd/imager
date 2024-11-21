@@ -9,41 +9,42 @@
 
 <body>
 
-<div class="button-container">
-	<div class="left-buttons">
-	  <button id="start" class="button-84" role="button" onclick="startAssay()" > Start </button>
-	  <button id="stop" class="button-84" onclick="endAssay()" > End </button>
-	  <button id="analyze" class="button-84" onclick="analyzeData()" > Analyze </button>
-	</div>
-	<div>
-  	<button id="getImage" class="button-84" role="button" onclick="getImage()" > Get Chip Image </button>
-	</div>
-</div>
+<div class="main-container">
 
-<div class="chart-container">
-  <div class="row">
-    <div class="chart" id="rawDataChart"><b>Fluorescence Data</b></div>
-    <div class="chart" id="temperatureChart"><b>Chip Temperature</b></div>
-  </div>
-  <div class="row">
-    <div class="chart" id="filteredDataChart"><b>Filtered Data</b></div>
-    <div class="chart" id="ttpChart"><b>Time to Positive</b></div>
-  </div>
-</div>
-
-<br>
-
-<div class="log-image-container">
-	<div class="log-image-row">
-	  <div class="image"><img id="image" alt="Chip Image" /></div>
-	  <div class="log" id="log"><b>Server Log</b><br><br></div>
+	<div class="button-container">
+		<div class="left-buttons">
+		  <button id="start" class="button-84" role="button" onclick="startAssay()" > Start </button>
+		  <button id="stop" class="button-84" onclick="endAssay()" > End </button>
+		  <button id="analyze" class="button-84" onclick="analyzeData()" > Analyze </button>
+		</div>
+		<div>
+	  	<button id="getImage" class="button-84" role="button" onclick="getImage()" > Get Image </button>
+	  </div>
+	  <div>
+	  	<button id="shutdown" class="button-84" style="color:#dd5555" role="button" onclick="shutdown()" > Shutdown </button>
+		</div>
 	</div>
-</div>
 
-<div class="button-container">
-	<div class="left-buttons">
-	  <button id="shutdown" class="button-84" role="button" onclick="shutdown()" > Power Off System </button>
+	<div class="chart-container">
+	  <div class="row">
+	    <div class="chart" id="rawDataChart"><b>Fluorescence Data</b></div>
+	    <div class="chart" id="temperatureChart"><b>Chip Temperature</b></div>
+	  </div>
+	  <div class="row">
+	    <div class="chart" id="filteredDataChart"><b>Filtered Data</b></div>
+	    <div class="chart" id="ttpChart"><b>Time to Positive</b></div>
+	  </div>
 	</div>
+
+	<br>
+
+	<div class="log-image-container">
+		<div class="log-image-row">
+		  <div class="image"><img id="image" alt="Chip Image" /></div>
+		  <div class="log" id="log"><b>Server Log</b><br><br></div>
+		</div>
+	</div>
+
 </div>
 
 </body>
@@ -199,18 +200,22 @@ async function analyzeData() {
 	}
 }
 
+
 async function shutdown() {
 	customLog("shutdown() called");
-	customLog("System is powering off!!!");
-	document.getElementById("stop").disabled = true;
-	document.getElementById("start").disabled = true;
-	document.getElementById("analyze").disabled = true;
-
-	let message = 'shutdown';
-  let data = '';
-	let response = await queryServer(JSON.stringify([message,data]));
-	if (response.ok) {
-		customLog("shutdown() completed");  // Pi should shut down before this!
+	let response = confirm("Do you want to shut down?");
+	if (response) {
+		customLog("System is powering off!!!");
+		document.getElementById("stop").disabled = true;
+		document.getElementById("start").disabled = true;
+		document.getElementById("analyze").disabled = true;
+		let message = 'shutdown';
+	  let data = '';
+		let response = await queryServer(JSON.stringify([message,data]));
+		if (response.ok) {} // Pi should shut down, so no response
+	}
+	else {
+		customLog("shutdown cancelled");
 	}
 }
 
