@@ -68,7 +68,7 @@ class S(BaseHTTPRequestHandler):
         info = json.loads(post_dict['todo'])
         action = info[0]
         data = info[1]
-        print(f'{action}: {data}')
+        #print(f'{action}: {data}')
         if action == 'start':            # Start the PID loop for temp control
             start_pid()
         if action == 'getImage':         # Get an image of the chip
