@@ -4,6 +4,9 @@
     right: auto !important;    
 }
 
+.content {overflow:hidden;}
+
+
 *:not(i, code, button, span, a) {
   font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
   font-size: 12px;
@@ -12,12 +15,20 @@
 
 body, html {
   height: 100%;
+  overflow-y:hidden;
 }
 
 .main-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;   /* Full viewport height */
+  /* Nearly full viewport height to leave border: */
+  height: 98vh;   
+  width: 98vw; 
+  /* Below 4 lines will center content in window: */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .chart-container {
