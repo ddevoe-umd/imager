@@ -21,7 +21,7 @@
 	  	<button id="getImage" class="button-84" role="button" onclick="getImage()" > Get Image </button>
 	  </div>
 	  <div>
-	  	<button id="shutdown" class="button-84" style="color:#dd5555" role="button" onclick="shutdown()" > Shutdown </button>
+	  	<button id="shutdown" class="button-84" role="button" onclick="shutdown()" > Shutdown </button>
 		</div>
 	</div>
 
@@ -99,12 +99,12 @@ const target_dict = {
 };
 
 
-function customLog(message) {
+function log(message) {
 	console.log(message);            // display message on Javascript console
 	const log = document.getElementById("log");
 	log.innerHTML += message + "<br />";      // display message in HTML
-	//log.scrollTop = log.scrollHeight;      // scroll to bottom to show new message
-	log.scroll({ top: log.scrollHeight, behavior: 'smooth' });
+	//log.scrollTop = log.scrollHeight;       // pin scroll to bottom
+	log.scroll({ top: log.scrollHeight, behavior: 'smooth' }); // pin scroll to bottom
 }
 
 
@@ -122,11 +122,11 @@ async function queryServer(message) {
 async function startPID() {
 	let message = 'start';
 	let data = '';
-	customLog("startPID() called");
+	log("startPID() called");
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
-		customLog(results);
+		log(results);
 		let results_array = results.split(",");
 		newData = [];
 		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
@@ -135,7 +135,7 @@ async function startPID() {
 }
 
 async function endAssay() {
-	customLog("endAssay() called");
+	log("endAssay() called");
 	document.getElementById("stop").disabled = true;
 	if (assayTimer) clearInterval(assayTimer);
 	document.getElementById("start").disabled = false;
@@ -144,8 +144,8 @@ async function endAssay() {
 	let response = await queryServer(JSON.stringify([message,data]));
 	if (response.ok) {
 		results = await response.text();
-		customLog("Server response:")
-		customLog(results);
+		log("Server response:")
+		log(results);
 		currentFileName = results;
 		document.getElementById("analyze").disabled = false;
 		document.getElementById('analyze').innerText = "Analyze " + currentFileName;
@@ -154,14 +154,14 @@ async function endAssay() {
 }
 
 async function getData() {
-	customLog("getData() called");
+	log("getData() called");
 	let message = 'getData';
 	let data = '';
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
-		customLog("Server response:")
-		customLog(results);
+		log("Server response:")
+		log(results);
 		let results_array = results.split(",");
 		newData = [];
 		results_array.forEach( ele => newData.push(+ele))   // strings to numbers
@@ -170,13 +170,13 @@ async function getData() {
 }
 
 async function getImage() {
-	customLog("getImage() called");
+	log("getImage() called");
 	let message = 'getImage';
 	let data = '';
 	let response = await queryServer(JSON.stringify([message,data]));
   if (response.ok) {
 		results = await response.text();
-		customLog("Image data received")
+		log("Image data received")
 		const base64Image = results;
 		let results_array = results.split(",");
 		document.getElementById('image').src = base64Image;
@@ -184,17 +184,17 @@ async function getImage() {
 }
 
 async function analyzeData() {
-	customLog("analyzeData() called");
+	log("analyzeData() called");
   let message = 'analyze';
 	let data = currentFileName;
 	let response = await queryServer(JSON.stringify([message,data]));
 	if (response.ok) {
 		results = await response.text();
 		let data = JSON.parse(results);
-		customLog("Server response: ");
-		customLog(data)
     let ttp = data[0];
     let xy = data[1];
+		log("Server response: ");
+		log(ttp);
     displayFilteredData(xy);
 		displayTTP(ttp);
 	}
@@ -202,10 +202,10 @@ async function analyzeData() {
 
 
 async function shutdown() {
-	customLog("shutdown() called");
+	log("shutdown() called");
 	let response = confirm("Do you want to shut down?");
 	if (response) {
-		customLog("System is powering off!!!");
+		log("System is powering off!!!");
 		document.getElementById("stop").disabled = true;
 		document.getElementById("start").disabled = true;
 		document.getElementById("analyze").disabled = true;
@@ -215,7 +215,7 @@ async function shutdown() {
 		if (response.ok) {} // Pi should shut down, so no response
 	}
 	else {
-		customLog("shutdown cancelled");
+		log("shutdown cancelled");
 	}
 }
 
@@ -240,13 +240,14 @@ function setupAmplificationChart(targetContainer) {
 	// Set up plot info:
 	let plotInfo = [];
 
-	let g = 1;   // group number used to group target sets in charts
+	let g = 1;   // group number (for grouping target sets in charts)
 	for (const key in target_dict) {
 		let key_found = false;
 		for (let i=0; i<wellNames.length; i++) {
       if (wellNames[i] == key) {
       	// Set up plot data & shared plot attributes:
 				data_dict = {	
+					name: key,
 					type: "line",
 					group: g,
 					dataPoints: wellArray[i],
@@ -255,7 +256,6 @@ function setupAmplificationChart(targetContainer) {
 				};
 				// Only show each gene target in the legend once:
 				if (!key_found) {
-					data_dict.name = key;
 					data_dict.showInLegend = true;
 					key_found = true;
 				}
