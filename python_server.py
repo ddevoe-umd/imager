@@ -89,6 +89,9 @@ class S(BaseHTTPRequestHandler):
         elif action == 'shutdown':       # Power down the Pi
             shutdown()
 
+    def log_message(self, format, *args):  # Suppress server output
+        return
+
 # Calibration function for PWM (temperature control):
 def cali_fun(y_data):
     y_adj = (
