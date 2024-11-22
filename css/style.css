@@ -45,6 +45,7 @@ body, html {
 .log-image-container {
   display: flex;
   gap: 20px;   /* Space between rows */
+  max-height: 50%;
 }
 
 .log-image-row {
